@@ -11,12 +11,12 @@
     <h2 class="text-2xl font-bold mb-4 text-center">Compare Excel Files</h2>
     
     <div class="mb-4">
-      <label class="block font-medium mb-1">Upload 2nd Week File</label>
+      <label class="block font-medium mb-1">Upload First File</label>
       <input type="file" id="week2" class="w-full p-2 border rounded" />
     </div>
 
     <div class="mb-4">
-      <label class="block font-medium mb-1">Upload 3rd Week File</label>
+      <label class="block font-medium mb-1">Upload Second File</label>
       <input type="file" id="week3" class="w-full p-2 border rounded" />
     </div>
 
@@ -63,8 +63,8 @@
         link.href = url;
         link.textContent = "Download Processed File";
         link.classList.remove("hidden");
-        link.download = "Processed_Output.xlsx";
-        status.textContent = "✅ Processing complete!";
+        link.download = "Excel_comparison_Output.xlsx";
+        status.textContent = "✅ Process complete!";
       } catch (err) {
         status.textContent = "❌ Failed to process the files.";
       }
