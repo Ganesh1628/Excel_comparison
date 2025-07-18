@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill
+from openpyxl.utils.dataframe import dataframe_to_rows
 from starlette.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -82,19 +83,46 @@ async def process_excel(
     wb = load_workbook(result_file)
 
     # Define fills
-    fill_green = PatternFill(start_color="00EA00", end_color="00EA00", fill_type="solid")  # Green
-    fill_red = PatternFill(start_color="FF2121", end_color="FF2121", fill_type="solid")    # Red
-    fill_yellow = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid") # Yellow
-    fill_white = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")  # White (for ↓↓ 0)
+    fill_green = PatternFill(start_color="00EA00", end_color="00EA00", fill_type="solid")
+    fill_red = PatternFill(start_color="FF2121", end_color="FF2121", fill_type="solid")
+    fill_yellow = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    fill_white = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+
+    comparison_legend = [
+        ["Symbol:", "Meaning:"],
+        ["↑", "Current rank is better (improved)."],
+        ["↓", "Current rank is worse (declined)."],
+        ["↓↓ 0", "Both weeks had default value 0 (no data)."],
+        ["→", "No change in rank."],
+        ["→ NA", "Data missing in one or both weeks."]
+    ]
+
+    difference_legend = [
+        ["Color:", "Meaning:"],
+        ["Green", "Rank improved."],
+        ["Red", "Rank declined."],
+        ["Yellow", "No change (difference is 0)."],
+        ["White", "Default zero value in both weeks."]
+    ]
 
     for sheet in wb.sheetnames:
         if sheet.endswith("_Comparison"):
             ws_cmp = wb[sheet]
+            # Write comparison legend starting at column H (8)
+            for r_idx, row in enumerate(comparison_legend, 1):
+                for c_idx, val in enumerate(row, 0):  # zero-based offset for column H
+                    ws_cmp.cell(row=r_idx, column=8 + c_idx).value = val
+
             sheet_base = sheet.replace("_Comparison", "")
             diff_sheet = f"{sheet_base}_Difference"
             if diff_sheet not in wb.sheetnames:
                 continue
             ws_diff = wb[diff_sheet]
+
+            # Write difference legend starting at column J (10)
+            for r_idx, row in enumerate(difference_legend, 1):
+                for c_idx, val in enumerate(row, 0):
+                    ws_diff.cell(row=r_idx, column=10 + c_idx).value = val
 
             for col in range(3, ws_cmp.max_column + 1):
                 for row in range(2, ws_cmp.max_row + 1):
@@ -102,7 +130,6 @@ async def process_excel(
                     cell_diff = ws_diff.cell(row=row, column=col)
                     value = str(cell_cmp.value)
 
-                    # Font coloring
                     if value.startswith("↓↓"):
                         cell_cmp.font = Font(color=arrow_colors["↓↓"], bold=True)
                         if value.strip() == "↓↓ 0":
@@ -117,9 +144,7 @@ async def process_excel(
                         cell_diff.fill = fill_red
                     elif value.startswith("→"):
                         cell_cmp.font = Font(color=arrow_colors["→"], bold=True)
-                        # No color for →
-                    
-                    # Extra yellow fill if difference is exactly 0 and not "↓↓ 0"
+
                     if cell_diff.value == 0 and value.strip() != "↓↓ 0":
                         cell_diff.fill = fill_yellow
 
