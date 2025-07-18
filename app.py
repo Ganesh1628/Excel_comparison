@@ -38,14 +38,15 @@ async def process_excel(
     arrow_colors = {"↑": "008000", "↓": "FF0000", "→": "808080"}
 
     # Save uploaded files
-    input_path = f"temp_{input_file.filename}"
-    output_path = f"temp_{output_file.filename}"
+    input_path = f"/tmp/temp_{input_file.filename}"
+    output_path = f"/tmp/temp_{output_file.filename}"
+
     with open(input_path, "wb") as f:
         f.write(await input_file.read())
     with open(output_path, "wb") as f:
         f.write(await output_file.read())
-
-    result_file = "SERP_Comparison_Result.xlsx"
+        
+        result_file = "/tmp/SERP_Comparison_Result.xlsx"
     with pd.ExcelWriter(result_file, engine='openpyxl') as writer:
         sheet_names = pd.ExcelFile(input_path).sheet_names
         for sheet in sheet_names:
