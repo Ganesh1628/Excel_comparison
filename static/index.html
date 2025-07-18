@@ -50,7 +50,7 @@
       formData.append("output_file", file2);
 
       try {
-        const res = await fetch("https://excel-comparison-tau.vercel.app/process", {
+        const res = await fetch("/process", {
           method: "POST",
           body: formData,
         });
